@@ -27,21 +27,24 @@ public class Calculator {
         return Math.max(a,b);
     }
 
-    public int minElement(int[] list){
-        int x=list[0];
-        for(int i=1; i< list.length;i++){
-            x=min(x,list[i]);
-        }
-        return x;
-    }
+    public int minElement(int [] liste) {
+		int c =liste[0];
+		for(int i=0;i<=liste.length-1;i++) 
+		{
+			c=min(c,liste[i]);
+		}
+		return c;
+	}
 
-    public int maxElement(int [] list){
-        int y=list[0];
-        for (int j : list) {
-            y = max(y, j);
-        }
-        return y;
-    }
+    public int maxElement(int []liste) {
+		int m=liste[0];
+		for(int i=0;i<=liste.length-1;i++) 
+		{
+			
+			m=max(m,liste[i]);
+		}
+		return m;
+	}
 
 
 }
