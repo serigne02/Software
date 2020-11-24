@@ -1,17 +1,19 @@
-FROM debian:9
+FROM mysql:latest as builder
 
-RUN apt-get update -yq \
-    && apt-get install curl gnupg -yg \
-    && curl -sL https://deb.nodesource.com/setup_10.x | bash \
-    && apt-get install nodejs -yq \
-    && apt-get clean -y
-ADD ./app/
+# That file does the DB initialization but also runs mysql daemon, by removing the last line it will only init
+RUN ["sed", "-i", "s/exec \"$@\"/echo \"not running $@\"/", "/usr/local/bin/docker-entrypoint.sh"]
 
-WORKDIR /app
+# needed for intialization
+ENV MYSQL_ROOT_PASSWORD=root
 
-RUN npm install
+COPY setup.sql /docker-entrypoint-initdb.d/
 
-CMD npm run start
+# Need to change the datadir to something else that /var/lib/mysql because the parent docker file defines it as a volume.
+# https://docs.docker.com/engine/reference/builder/#volume :
+#       Changing the volume from within the Dockerfile: If any build steps change the data within the volume after
+#       it has been declared, those changes will be discarded.
+RUN ["/usr/local/bin/docker-entrypoint.sh", "mysqld", "--datadir", "/initialized-db"]
 
-EXPOSE 2368
-VOLUME /app/logs
+FROM mysql:latest
+
+COPY --from=builder /initialized-db /var/lib/mysql
