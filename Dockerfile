@@ -1,19 +1,17 @@
-FROM mysql:latest as builder
+FROM openjdk:8-jdk-alpine
 
-# That file does the DB initialization but also runs mysql daemon, by removing the last line it will only init
-RUN ["sed", "-i", "s/exec \"$@\"/echo \"not running $@\"/", "/usr/local/bin/docker-entrypoint.sh"]
+ARG JAR_FILE=target/Software-1.0-SNAPSHOT.jar
+ARG JAR_LIB_FILE=target/lib/
 
-# needed for intialization
-ENV MYSQL_ROOT_PASSWORD=root
+#cd /usr/local/runme
+WORKDIR /usr/local/runme
 
-COPY setup.sql /docker-entrypoint-initdb.d/
+# copy target/find-links.jar /usr/local/runme/app.jar
+COPY ${JAR_FILE} app.jar
 
-# Need to change the datadir to something else that /var/lib/mysql because the parent docker file defines it as a volume.
-# https://docs.docker.com/engine/reference/builder/#volume :
-#       Changing the volume from within the Dockerfile: If any build steps change the data within the volume after
-#       it has been declared, those changes will be discarded.
-RUN ["/usr/local/bin/docker-entrypoint.sh", "mysqld", "--datadir", "/initialized-db"]
+#copy project dependencies
+# cp -rf target/lib/ /usr/local/runme/lib
+ADD ${JAR_LIB_FILE} lib/
 
-FROM mysql:latest
-
-COPY --from=builder /initialized-db /var/lib/mysql
+# java -jar /usr/local/runme/app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
